@@ -1,40 +1,73 @@
-// Matrix Rain Effect
+// Gradient Particles Background
 const canvas = document.getElementById('matrix');
 const ctx = canvas.getContext('2d');
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-const matrix = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789@#$%^&*()*&^%+-/~{[|`]}";
-const matrixArray = matrix.split("");
+class Particle {
+    constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2 + 1;
+        this.speedX = Math.random() * 0.5 - 0.25;
+        this.speedY = Math.random() * 0.5 - 0.25;
+        this.opacity = Math.random() * 0.5 + 0.2;
+    }
 
-const fontSize = 16;
-const columns = canvas.width / fontSize;
+    update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
 
-const drops = [];
-for (let x = 0; x < columns; x++) {
-    drops[x] = 1;
-}
+        if (this.x > canvas.width) this.x = 0;
+        if (this.x < 0) this.x = canvas.width;
+        if (this.y > canvas.height) this.y = 0;
+        if (this.y < 0) this.y = canvas.height;
+    }
 
-function drawMatrix() {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = '#00f0ff';
-    ctx.font = fontSize + 'px monospace';
-
-    for (let i = 0; i < drops.length; i++) {
-        const text = matrixArray[Math.floor(Math.random() * matrixArray.length)];
-        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-            drops[i] = 0;
-        }
-        drops[i]++;
+    draw() {
+        ctx.fillStyle = `rgba(99, 102, 241, ${this.opacity})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
     }
 }
 
-setInterval(drawMatrix, 35);
+const particles = [];
+for (let i = 0; i < 100; i++) {
+    particles.push(new Particle());
+}
+
+function animateParticles() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    particles.forEach(particle => {
+        particle.update();
+        particle.draw();
+    });
+
+    // Connect particles
+    particles.forEach((a, i) => {
+        particles.slice(i + 1).forEach(b => {
+            const dx = a.x - b.x;
+            const dy = a.y - b.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < 100) {
+                ctx.strokeStyle = `rgba(99, 102, 241, ${0.2 * (1 - distance / 100)})`;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(a.x, a.y);
+                ctx.lineTo(b.x, b.y);
+                ctx.stroke();
+            }
+        });
+    });
+
+    requestAnimationFrame(animateParticles);
+}
+
+animateParticles();
 
 window.addEventListener('resize', () => {
     canvas.width = window.innerWidth;
@@ -107,10 +140,10 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 const navbar = document.querySelector('.navbar');
 window.addEventListener('scroll', () => {
     if (window.scrollY > 100) {
-        navbar.style.background = 'rgba(10, 10, 10, 0.98)';
-        navbar.style.boxShadow = '0 0 20px rgba(0, 240, 255, 0.3)';
+        navbar.style.background = 'rgba(15, 23, 42, 0.95)';
+        navbar.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.3)';
     } else {
-        navbar.style.background = 'rgba(10, 10, 10, 0.95)';
+        navbar.style.background = 'rgba(15, 23, 42, 0.8)';
         navbar.style.boxShadow = 'none';
     }
 });
@@ -134,7 +167,7 @@ const observer = new IntersectionObserver((entries) => {
 document.querySelectorAll('section').forEach(section => {
     section.style.opacity = '0';
     section.style.transform = 'translateY(50px)';
-    section.style.transition = 'all 0.8s ease';
+    section.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
     observer.observe(section);
 });
 
@@ -177,8 +210,8 @@ if (aboutSection) {
 const skillItems = document.querySelectorAll('.skill-item');
 skillItems.forEach((item, index) => {
     item.style.opacity = '0';
-    item.style.transform = 'scale(0.8)';
-    item.style.transition = `all 0.5s ease ${index * 0.05}s`;
+    item.style.transform = 'translateY(20px)';
+    item.style.transition = `all 0.5s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.05}s`;
 });
 
 const skillsObserver = new IntersectionObserver((entries) => {
@@ -187,7 +220,7 @@ const skillsObserver = new IntersectionObserver((entries) => {
             const items = entry.target.querySelectorAll('.skill-item');
             items.forEach(item => {
                 item.style.opacity = '1';
-                item.style.transform = 'scale(1)';
+                item.style.transform = 'translateY(0)';
             });
             skillsObserver.unobserve(entry.target);
         }
@@ -204,7 +237,7 @@ const projectCards = document.querySelectorAll('.project-card');
 projectCards.forEach((card, index) => {
     card.style.opacity = '0';
     card.style.transform = 'translateY(50px)';
-    card.style.transition = `all 0.6s ease ${index * 0.2}s`;
+    card.style.transition = `all 0.6s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.2}s`;
 });
 
 const projectsObserver = new IntersectionObserver((entries) => {
@@ -251,85 +284,53 @@ if (contactForm) {
     });
 }
 
-// Cursor Trail Effect
-let cursorTrail = [];
-const trailLength = 20;
-
-document.addEventListener('mousemove', (e) => {
-    cursorTrail.push({ x: e.clientX, y: e.clientY });
-    
-    if (cursorTrail.length > trailLength) {
-        cursorTrail.shift();
-    }
-    
-    // Remove old trail elements
-    document.querySelectorAll('.cursor-trail').forEach(el => el.remove());
-    
-    // Create new trail
-    cursorTrail.forEach((pos, index) => {
-        const trail = document.createElement('div');
-        trail.className = 'cursor-trail';
-        trail.style.cssText = `
-            position: fixed;
-            width: ${10 - (index / trailLength) * 8}px;
-            height: ${10 - (index / trailLength) * 8}px;
-            background: rgba(0, 240, 255, ${1 - (index / trailLength)});
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 9999;
-            left: ${pos.x}px;
-            top: ${pos.y}px;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
-        `;
-        document.body.appendChild(trail);
-        
-        setTimeout(() => trail.remove(), 100);
-    });
-});
-
-// Parallax Effect
+// Smooth Parallax Effect
 window.addEventListener('scroll', () => {
     const scrolled = window.pageYOffset;
     const parallaxElements = document.querySelectorAll('.cyber-frame, .cyber-card');
     
     parallaxElements.forEach(element => {
-        const speed = 0.5;
+        const speed = 0.3;
         element.style.transform = `translateY(${scrolled * speed}px)`;
     });
 });
 
-// Add glitch effect to title on hover
-const glitchText = document.querySelector('.glitch-text');
-if (glitchText) {
-    glitchText.addEventListener('mouseenter', () => {
-        glitchText.style.animation = 'glitch 0.3s infinite';
+// Mouse Move Effect on Cards
+document.querySelectorAll('.project-card, .skill-category, .stat-item').forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        
+        const rotateX = (y - centerY) / 20;
+        const rotateY = (centerX - x) / 20;
+        
+        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-10px)`;
     });
     
-    glitchText.addEventListener('mouseleave', () => {
-        glitchText.style.animation = 'none';
+    card.addEventListener('mouseleave', () => {
+        card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0)';
     });
+});
+
+// Gradient Animation on Hero
+const heroText = document.querySelector('.hero-text h1');
+if (heroText) {
+    let hue = 250;
+    setInterval(() => {
+        hue = (hue + 1) % 360;
+        heroText.style.backgroundImage = `linear-gradient(135deg, hsl(${hue}, 70%, 60%), hsl(${hue + 30}, 70%, 60%))`;
+    }, 50);
 }
 
-// Random color change for skill items
-setInterval(() => {
-    const randomSkill = skillItems[Math.floor(Math.random() * skillItems.length)];
-    if (randomSkill) {
-        randomSkill.style.borderColor = `rgba(${Math.random() * 255}, ${Math.random() * 255}, 255, 0.5)`;
-        setTimeout(() => {
-            randomSkill.style.borderColor = 'rgba(0, 240, 255, 0.3)';
-        }, 1000);
-    }
-}, 3000);
-
 // Console Easter Egg
-console.log('%c🚀 Welcome to my Portfolio!', 'color: #00f0ff; font-size: 20px; font-weight: bold;');
-console.log('%cBuilt with ❤️ by Shubham Jadhav', 'color: #ff00ff; font-size: 14px;');
-console.log('%cInterested in the code? Check out my GitHub!', 'color: #00ff88; font-size: 12px;');
-console.log('%chttps://github.com/shubhamjadhav0715', 'color: #00f0ff; font-size: 12px;');
-
-// Prevent right-click (optional - remove if you don't want this)
-// document.addEventListener('contextmenu', (e) => e.preventDefault());
+console.log('%c🚀 Welcome to my Portfolio!', 'color: #6366f1; font-size: 24px; font-weight: bold;');
+console.log('%cBuilt with ❤️ by Shubham Jadhav', 'color: #8b5cf6; font-size: 16px;');
+console.log('%cInterested in the code? Check out my GitHub!', 'color: #06b6d4; font-size: 14px;');
+console.log('%chttps://github.com/shubhamjadhav0715', 'color: #6366f1; font-size: 14px;');
 
 // Loading Animation
 window.addEventListener('load', () => {
@@ -338,4 +339,15 @@ window.addEventListener('load', () => {
         document.body.style.transition = 'opacity 1s ease';
         document.body.style.opacity = '1';
     }, 100);
+});
+
+// Add smooth reveal animation to buttons
+document.querySelectorAll('.btn').forEach(btn => {
+    btn.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-3px) scale(1.05)';
+    });
+    
+    btn.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0) scale(1)';
+    });
 });
